@@ -15,6 +15,15 @@ our %macro_conversions = (
 	'Anchor' => sub { "<a name=\"$_[1]\">" },
 	'Comments' => 'comments',
 	'MailTo' => \&_mailTo_macro,
+	'TableOfContents' => sub {
+		$_[1]->[0] eq 'right'
+			? '<div style="float:right">__TOC__</div>'
+			: '__TOC__' },
+	'address' => 'address',
+	'FootNote' => \&_footnote_macro,
+	'PageCount' => 'NUMBEROFPAGES',
+	'UserCount' => 'NUMBEROFUSERS',
+	'File' => sub { "[[media:$_[1]->[0]]]" },
 
 );
 
@@ -50,8 +59,30 @@ sub convert_wikicode {
 
 	# Links ["foo" bar] to [[foo|bar]]
 	$wc =~ s/\["[^"]"(?: ([^\]]+))?\]/$2 ? "[[$1]]" : "[[$1|$2]]"/eg;
+	# interwiki links...
 
+	# Definiton lists
+	$wc =~ s/^ +([^:\n]+):: ?/; $1\n/g;
 
+	# increase header level by one to deal with <h1> mediawiki brokenness
+	$wc =~ s/^ +(=+)(.*)\1$/
+		$2 eq ' ' ? '<div style="clear:both"><\/div>' :
+		"=$1$2$1="/eg;
+
+	# Convert bullet points
+	my %bullets = (
+		'*' => '*', '1' => '#', 'I' => '#', 'A' => '#', 'a' => '#', ' ' => ':'
+	);
+	$wc =~ s/^( ++)([1IaA]\.(?:\#\d++)|\*)? +/
+		$bullets{substr($2." ", 0, 1)} x (length($1) || 1)/eg;
+	#^ does not really support offsets, except to parse them.
+	# Same with numbering systems
+
+	$wc =~ s/---?/—/g;
+
+	# BIG TODO: Tables
+
+	return $wc;
 }
 
 sub _indent {
@@ -93,4 +124,10 @@ sub _mailto_macro {
 	$text =~ s/DOT/./g;
 	$text =~ s/[[:upper:]]+//g;
 	return $text;
+}
+
+sub _footnote_macro {
+	my $arglist = $_[1];
+	my $note = join ', ', @$arglist;
+	return $note ? "<ref>$note</ref>" : "<references/>";
 }
