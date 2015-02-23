@@ -37,6 +37,9 @@ sub register_template {
 sub convert_wikicode {
 	my ($self, $wc) = @_;
 
+	#redirects
+	$wc =~ s/^\#redirect \K(.*)(\n|\z)/[[$1]]$2/ and return $wc;
+
 	# since <> are significant in Mediawiki, we need to encode them
 	$wc =~ s/</&lt;/g;
 	$wc =~ s/>/&gt;/g;
@@ -47,10 +50,10 @@ sub convert_wikicode {
 	# need to hide nowiki here
 
 	# Add HTML tags from sycamore wikicode formatting
-	$wc =~ s/--&lt;(.+?)&gt;--/<center>$1<\/center>/g;
+	$wc =~ s/--\&gt;(.+?)\&lt;--/<center>$1<\/center>/g;
 	$wc =~ s/\^(.+?)\^/<sup>$1<\/sup>/g;
 	$wc =~ s/,,(.+?),,/<sub>$1<\/sub>/g;
-	$wc =~ s/__(.+?)__/<u>$1<\u>/g;
+	$wc =~ s/__(.+?)__/<u>$1<\/u>/g;
 	$wc =~ s/--X(.+?)X--/<strike>$1<\/strike>/g;
 
 	# Macros [[Foo(a,b)]] to {{foo|a|b}}
@@ -58,8 +61,10 @@ sub convert_wikicode {
 	# This needs to be fixed for quoted strings ^
 
 	# Links ["foo" bar] to [[foo|bar]]
-	$wc =~ s/\["[^"]"(?: ([^\]]+))?\]/$2 ? "[[$1]]" : "[[$1|$2]]"/eg;
-	# interwiki links...
+	$wc =~ s/\["([^"]+)"(?: ([^\]]+))?\]/$2 ? "[[$1|$2]]" : "[[$1]]"/eg;
+	# interwiki links... for now assume a simple interwiki map
+	$wc =~ s/\[wiki:([^:\n]+):"[^"]"(?: ([^\]]+))?\]/
+		$3 ? "[[$1:$2]]" : "[[$1:$2|$3]]"/eg;
 
 	# Definiton lists
 	$wc =~ s/^ +([^:\n]+):: ?/; $1\n/g;
@@ -73,14 +78,15 @@ sub convert_wikicode {
 	my %bullets = (
 		'*' => '*', '1' => '#', 'I' => '#', 'A' => '#', 'a' => '#', ' ' => ':'
 	);
-	$wc =~ s/^( ++)([1IaA]\.(?:\#\d++)|\*)? +/
-		$bullets{substr($2." ", 0, 1)} x (length($1) || 1)/eg;
+	$wc =~ s/^( ++)([1IaA]\.(?:\#\d++)? +|\* *)?/
+		($bullets{substr(($2||" "), 0, 1)} x (length($1) || 1)) . " "/meg;
 	#^ does not really support offsets, except to parse them.
 	# Same with numbering systems
 
 	$wc =~ s/---?/—/g;
 
 	# BIG TODO: Tables
+
 
 	return $wc;
 }
