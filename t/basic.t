@@ -5,7 +5,7 @@ use warnings;
 use Test::More;
 use lib qw< lib ../lib >;
 use MediaWiki::FromSycamore;
-
+use utf8::all;
 
 sub convert {
 	MediaWiki::FromSycamore->convert_wikicode( shift );
@@ -36,7 +36,17 @@ is convert("--> foo bar <--"), "<center> foo bar </center>",
 is convert("A__under__line"), "A<u>under</u>line",
 	"underlines";
 
-#is convert(
+
+is convert("pret-X--a--X-porter"), "pret-<strike>a</strike>-porter",
+	"strikethrough";
+is convert("pret---XaX---porter X--"), "pret—Xa<strike>-porter </strike>",
+	"strikethrough doesn't do ---";
+is convert("X--FooX-- and --XBar--X"), "<strike>Foo</strike> and <strike>Bar</strike>",	"strikethrough --X and X-- equivalence";
+
+is convert("= Header ="), "== Header ==",
+	"top level headers are at least ==";
+is convert(" == Indented header =="),
+	"=== Indented header ===", "Indentations removed from headers";
 
 
 done_testing;
