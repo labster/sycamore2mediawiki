@@ -212,10 +212,11 @@ sub _insert_image {
 		if ($_ =~ /^\d+$/)        { $_ .= "px" }
 		elsif ($_ eq "thumbnail") { $_ = undef; $type = "thumb" }
 		elsif ($_ eq "noborder")  { $_ = undef }
-		elsif ($_ eq "right" or $_ eq "left")  { $type ||= "frame" }
+		elsif ($_ eq "right" or $_ eq "left")  { ; }
 		else { s/^"|"$//g; push @captionbits, $_; $_ = undef }
 	}
-	my $caption = join ', ', @captionbits;
+	my $caption = join(', ', @captionbits) || undef;
+	$type ||= "frame" if $caption;
 	return "[[File:" . join("|", grep {defined $_} $filename, $type, @args, $caption) . ']]';
 }
 
