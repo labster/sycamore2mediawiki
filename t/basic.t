@@ -15,6 +15,11 @@ is convert('["Basic Link"]'), "[[Basic Link]]", "basic linking";
 is convert('["Link" with alt]'), "[[Link|with alt]]", "link with alt";
 is convert('[http://example.com alt]'), '[http://example.com alt]', "http link unchanged";
 
+MediaWiki::FromSycamore->register_propercased_names("FooBar", "Ba Z");
+is convert('["foobar"]'), '[[FooBar|foobar]]', "case insensitive links";
+is convert('["ba Z"]'), '[[ba Z]]', "lcfirst is OK in links";
+is convert('["FooBar" FooBar]'), '[[FooBar]]', "collapse link=alt text";
+
 is convert("#redirect Foo page\n"), "#redirect [[Foo page]]\n",
 	"redirect";
 

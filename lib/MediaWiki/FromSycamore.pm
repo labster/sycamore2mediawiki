@@ -27,6 +27,8 @@ our %macro_conversions = (
 	'File' => sub { "[[media:$_[1]->[0]]]" },
 
 );
+our %propercased_name;
+
 my %alignments = ( qw/ ( left : center ) right ^ top v bottom / );
 my %align_type = ( qw/ ( align : align ) align ^ valign v valign / );
 
@@ -35,6 +37,16 @@ sub register_template {
 	return 0 unless defined $template;
 	$macro_conversions{$macro} = $template;
 	return 1;
+}
+
+sub register_propercased_names {
+	my ($self, @args) = @_;
+	for my $x (@args) {
+		if (ref($x) eq "ARRAY") {
+			$propercased_name{lc($_)} = $_ for @$x;
+		}
+		else { $propercased_name{lc($x)} = $x }
+	}
 }
 
 sub convert_wikicode {
@@ -60,12 +72,12 @@ sub convert_wikicode {
 	$wc =~ s/(?:X--|(?<!-)--X)(.+?)(?:X--|(?<!-)--X)/<strike>$1<\/strike>/g;
 
 	# Macros [[Foo(a,b)]] to {{foo|a|b}}
-	$wc =~ s/\[\[ (\w+) (?: \( [^\)]+ \) )? \]\]/macro2template($1, $2)/xeg;
+	$wc =~ s/\[\[ (\w+) (?: \( ([^\)]+) \) )? \]\]/macro2template($1, $2)/xeg;
 	# This needs to be fixed for quoted strings ^
+	# ... actually I just hacked around that later
 
 	# Links ["foo" bar] to [[foo|bar]]
-	# Think of how to deal with case-insensitive linking
-	$wc =~ s/\["([^"]+)"(?: ([^\]]+))?\]/$2 ? "[[$1|$2]]" : "[[$1]]"/eg;
+	$wc =~ s/\["([^"]+)"(?: ([^\]]+))?\]/_internal_link_rw($1, $2)/eg;
 	# interwiki links... for now assume a simple interwiki map
 	$wc =~ s/\[wiki:([^:\n]+):"[^"]"(?: ([^\]]+))?\]/
 		$3 ? "[[$1:$2]]" : "[[$1:$2|$3]]"/eg;
@@ -178,25 +190,46 @@ sub _indent {
 
 sub macro2template {
 	my ($macro, $arglist) = @_;
-	my @args = split / *, */, $arglist;
+	my @args = split / *, */, $arglist if $arglist;
 	my $name = $macro_conversions{$macro};
-	if (ref($name) == "CODE") {
+	if (ref($name) eq "CODE") {
 		return $name->($macro, \@args);
 	}
 	$name //= $macro;
 
-	return "{{", join('|', $name, @args), "}}";
+	return "{{". join('|', $name, @args). "}}";
 }
 
 # Macro functions
 sub _insert_image {
 	my (undef, $arglist) = @_;
 	my ($filename, @args) = @$arglist;
+	my @captionbits;  #sorry I know this is hacky
+	my $type = undef;
 	for (@args) {
-		$_ .= "px" if $_ =~ /^\d+$/;
-		$_ = "thumb" if $_ =~ "thumbnail"
+		if ($_ =~ /^\d+$/)        { $_ .= "px" }
+		elsif ($_ eq "thumbnail") { $_ = undef; $type = "thumb" }
+		elsif ($_ eq "noborder")  { $_ = undef }
+		elsif ($_ eq "right" or $_ eq "left")  { $type ||= "frame" }
+		else { s/^"|"$//g; push @captionbits, $_; $_ = undef }
 	}
-	return "[[File:" . join("|", $filename, @args) . ']]';
+	my $caption = join ', ', @captionbits;
+	return "[[File:" . join("|", grep {defined $_} $filename, $type, @args, $caption) . ']]';
+}
+
+sub _internal_link_rw {
+	my ($link, $text) = @_;
+	$text ||= '';
+
+	if (my $pc = $propercased_name{lc($link)}) {
+		$text = $link unless $text;
+		$link = $pc;
+	}
+	if (ucfirst($text) eq $link) { $link = $text }
+	if ($link eq $text) { $text = '' }
+
+	$link =~ s/^Users\//User:/i;
+	return $text ? "[[$link|$text]]" : "[[$link]]";
 }
 
 sub _mailto_macro {
