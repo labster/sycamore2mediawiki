@@ -16,7 +16,30 @@ Not even an alpha release yet.  Use at your own peril.  If you have development 
 How to Use
 ----------
 
-Yeah, not even close to ready.  Wait a week.
+Currently, all you can do is convert wikicode.  Note that we're still in beta, so these transformations aren't perfect. If you want to do this,
+try:
+
+	my $newpage = MediaWiki::FromSycamore->convert_wikicode( $a_page_of_wiki_markup );
+
+Support for reading XML dumps directly is forthcoming.  Stay tuned.
+
+The other thing you might be interested in is changing the way Sycamore
+macros convert into new wikicode.  We have a few defaults, but you might
+just want to choose a new template name for Mediawiki, or perhaps eliminate the content of said macros altogether.
+
+	# String version (simple transforms)
+	MediaWiki::FromSycamore->register_template( 'Address', 'streetaddress');
+	# changes "[[Address(123 Sesame Street)]]" to
+	# to "{{streetaddress|123 Sesame Street}}"
+
+	# Subroutine version (complex)
+	MediaWiki::FromSycamore->register_template( "nbsp",
+		sub { '&nbsp;' });
+	# changes "[[nbsp]]" to "&nbsp;" in new version
+
+The first argument passed to the sub given in `register_template`
+is the name of the macro, the second is an arrayref of the arguments.
+
 
 Where to get new hosting
 ------------------------
