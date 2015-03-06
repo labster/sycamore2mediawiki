@@ -27,6 +27,8 @@ our %macro_conversions = (
 	'File' => sub { "[[media:$_[1]->[0]]]" },
 
 );
+my %alignments = ( qw/ ( left : center ) right ^ top v bottom / );
+my %align_type = ( qw/ ( align : align ) align ^ valign v valign / );
 
 sub register_template {
 	my ($self, $macro, $template) = @_;
@@ -108,16 +110,60 @@ sub table_reformat {
 			my %celltraits = ();
 			$c =~ s/^((?:\|\|)+)//;
 			$celltraits{colspan} = length($1)/2 if length($1)/2 > 2;
-			if ($c =~ s/^ *<([^\>]++)>//) {
+			if ($c =~ s/^\&lt;(.*?)\&gt;//) {
 				my $traitslist = $1;
+				while ($traitslist =~ s/((?:table|row)?+)(\w+)\ *=\ *"([^\"]*)"//) {
+					my ($type, $attr, $data) = (lc($1), lc($2), $3);
+					if ($type eq 'table') {
+						$tabletraits{$attr} = $data;
+					} elsif ($type eq 'row') {
+						$rowtraits{$attr} = $data;
+					} else {
+						$celltraits{$attr} = $data;
+					}
+				}
+				# and the short attributes...
+				# srsly just ignore pathological cases
+				if ($traitslist =~ /\W/) {
+					$traitslist =~ s/\-(\d+)// and $celltraits{colspan} = $1;
+					$traitslist =~ s/\|(\d+)// and $celltraits{rowspan} = $1;
+					$traitslist =~ s/(\#[0-9a-fA-F]{6,6})// and $celltraits{bgcolor} = $1;
+					$traitslist =~ s/(\d+%)// and $celltraits{width} = $1;
+					while ($traitslist =~ s/([(:)^v])/ /) { $celltraits{$align_type{$1}} = $alignments{$1} }
+				}
+
+				my $tlist = make_traits_string(\%celltraits);
+				$c = "$tlist|$c" if $tlist;
 			}
 		}
-		$r = "\n|-" . "\n|"
+		$r = "\n|-" . make_traits_string(\%rowtraits) . "\n|"
 			. join("\n|", @cells);
 	}
-	return "{|"
+	return "{|" . make_traits_string(\%tabletraits)
 		. join("", @rows)
 		. "\n|}\n";
+
+	sub make_traits_string {
+		my $traits = shift;
+		my $tlist = '';
+		my %slist = ();
+		foreach my $k (sort keys %$traits) {
+			my $v = $traits->{$k};
+			if ($k eq 'colspan' or $k eq 'align' or $k eq 'valign' or $k eq 'class' or $k eq 'rowspan') {
+				$tlist .= " $k=\"$v\"";
+			} elsif ($k eq 'bgcolor') {
+				$slist{'background-color'} = $v
+			} elsif ($k eq 'border' or $k eq 'bordercolor') {
+				$slist{border} //= ($traits->{border} // '1') . "px solid " . ($traits->{bordercolor} // "black");
+			} else {
+				$slist{$k} = $v
+			}
+		}
+		my $style = join '; ', map { "$_: $slist{$_}" } sort keys %slist;
+		$tlist .= " style=\"$style\"" if $style;
+		return $tlist;
+	}
+
 }
 
 sub _indent {

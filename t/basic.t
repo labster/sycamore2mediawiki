@@ -48,41 +48,6 @@ is convert("= Header ="), "== Header ==",
 is convert(" == Indented header =="),
 	"=== Indented header ===", "Indentations removed from headers";
 
-is convert(
-"||foo||bar||
-||baz||quux||
-"),
-"{|
-|-
-|foo
-|bar
-|-
-|baz
-|quux
-|}
-",
-	"basic table";
-
-is convert(
-"||foo||bar||
-
-||baz||quux||
-"),
-"{|
-|-
-|foo
-|bar
-|}
-
-{|
-|-
-|baz
-|quux
-|}
-",
-	"2 tables";
-
-
 
 
 done_testing;
