@@ -3,7 +3,8 @@ package MediaWiki::FromSycamore;
 use strict;
 use warnings;
 use utf8::all;
-
+use Data::Dumper;
+use feature 'say';
 
 our %macro_conversions = (
 	'br' => sub { "<br/>" },
@@ -75,6 +76,10 @@ sub convert_wikicode {
 		$2 eq ' ' ? '<div style="clear:both"><\/div>' :
 		"=$1$2$1="/eg;
 
+	my @rows;
+	$wc =~ s/(?{ @rows = (); 1;})(?:^ *(\|\|.*)\|\|(?:\n|\z)(?{push @rows, $1;}))+/
+		table_reformat(@rows)/meg;
+
 	# Convert bullet points
 	my %bullets = (
 		'*' => '*', '1' => '#', 'I' => '#', 'A' => '#', 'a' => '#', ' ' => ':'
@@ -90,6 +95,29 @@ sub convert_wikicode {
 
 
 	return $wc;
+}
+
+sub table_reformat {
+	my @rows = @_;
+	my (%tabletraits);
+
+	for my $r (@rows) {
+		my %rowtraits = ();
+		my @cells = split /(?=\|\|++)/, $r;
+		for my $c (@cells) {
+			my %celltraits = ();
+			$c =~ s/^((?:\|\|)+)//;
+			$celltraits{colspan} = length($1)/2 if length($1)/2 > 2;
+			if ($c =~ s/^ *<([^\>]++)>//) {
+				my $traitslist = $1;
+			}
+		}
+		$r = "\n|-" . "\n|"
+			. join("\n|", @cells);
+	}
+	return "{|"
+		. join("", @rows)
+		. "\n|}\n";
 }
 
 sub _indent {
