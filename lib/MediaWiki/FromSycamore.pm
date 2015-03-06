@@ -8,23 +8,25 @@ use feature 'say';
 
 our %macro_conversions = (
 	'br' => sub { "<br/>" },
-	'RecentChanges' => sub { '#REDIRECT [[Special:RecentChanges]]' },
+	'recentchanges' => sub { '#REDIRECT [[Special:RecentChanges]]' },
 	'stop' => 'stop',
-	'Image' => \&_insert_image,
+	'image' => \&_insert_image,
 	'heart' => sub { '♥' },
 	'nbsp' => sub { '&nbsp;' },
-	'Anchor' => sub { "<a name=\"$_[1]\">" },
-	'Comments' => 'comments',
-	'MailTo' => \&_mailTo_macro,
-	'TableOfContents' => sub {
+	'anchor' => sub {
+		my $name = $_[1][0] =~ s/\s/_/rg;
+		qq{<div id="$name"></div>} },
+	'comments' => 'comments',
+	'mailto' => \&_mailTo_macro,
+	'tableofcontents' => sub {
 		$_[1]->[0] eq 'right'
 			? '<div style="float:right">__TOC__</div>'
 			: '__TOC__' },
 	'address' => 'address',
-	'FootNote' => \&_footnote_macro,
-	'PageCount' => 'NUMBEROFPAGES',
-	'UserCount' => 'NUMBEROFUSERS',
-	'File' => sub { "[[media:$_[1]->[0]]]" },
+	'footnote' => \&_footnote_macro,
+	'pagecount' => 'NUMBEROFPAGES',
+	'usercount' => 'NUMBEROFUSERS',
+	'file' => sub { "[[media:$_[1]->[0]]]" },
 
 );
 our %propercased_name;
@@ -72,7 +74,7 @@ sub convert_wikicode {
 	$wc =~ s/(?:X--|(?<!-)--X)(.+?)(?:X--|(?<!-)--X)/<strike>$1<\/strike>/g;
 
 	# Macros [[Foo(a,b)]] to {{foo|a|b}}
-	$wc =~ s/\[\[ (\w+) (?: \( ([^\)]+) \) )? \]\]/macro2template($1, $2)/xeg;
+	$wc =~ s/\[\[ (\w+) (?: \( ([^\)]+) \) )? \]\]/macro2template(lc($1), $2)/xeg;
 	# This needs to be fixed for quoted strings ^
 	# ... actually I just hacked around that later
 
@@ -232,11 +234,11 @@ sub _internal_link_rw {
 	return $text ? "[[$link|$text]]" : "[[$link]]";
 }
 
-sub _mailto_macro {
+sub _mailTo_macro {
 	my ($text) = @{$_[1]};
 	$text =~ s/AT/\@/g;
 	$text =~ s/DOT/./g;
-	$text =~ s/[[:upper:]]+//g;
+	$text =~ s/[[:upper:]\s]+//g;
 	return $text;
 }
 
