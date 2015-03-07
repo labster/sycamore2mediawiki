@@ -5,6 +5,10 @@ use warnings;
 use utf8::all;
 use Data::Dumper;
 use feature 'say';
+use XML::LibXML::Reader;
+use XML::Simple; #seriously sometimes I just want a tree
+use Time::Piece;
+
 
 our %macro_conversions = (
 	'br' => sub { "<br/>" },
@@ -247,4 +251,77 @@ sub _footnote_macro {
 	my $arglist = $_[1];
 	my $note = join ', ', @$arglist;
 	return $note ? "<ref>$note</ref>" : "<references/>";
+}
+
+#### XML handling ####
+sub convert_XML_wikitext {
+	my $self = shift;
+	my %options = @_;
+
+	my $outfh;
+	if ($options{output}) {
+		open $outfh, ">", $options{output} or die "can't open output";
+	} else {
+		$outfh = *STDOUT;
+	}
+
+	my $reader = XML::LibXML::Reader->new(location => $options{input})
+		   or die "cannot read $options{input}\n";
+	$reader->read;
+	die "this does not appear to be a sycamore file"
+		unless $reader->name() eq 'sycamore';
+
+	while ($reader->read) {
+		$reader->name eq 'page' and last;
+	}
+
+	my $xs = XML::Simple->new('ForceArray' => ['version']);
+
+	print $outfh qq/<mediawiki xml:lang="en">\n/;
+
+	while (1) {
+		die $reader->name if $reader->name ne 'page';
+
+		# Once we have a bite-sized chunk, go ahead and turn it
+		# into a data structure
+		# Yes I realize I'm parsing it twice :/
+		my $page = $xs->XMLin( $reader->readOuterXml() );
+
+		my $title = $page->{propercased_name};
+		my $restrictions = undef;
+
+		print $outfh "<page>\n",
+			"<title>$title</title>\n",
+			($restrictions || "");
+
+		print $outfh render_revision($_) for @{$page->{version}};
+
+		print $outfh "</page>\n\n";
+		$reader->nextSiblingElement('page') > 0 or last;
+	}
+
+	print $outfh "</mediawiki>\n";
+}
+
+sub render_revision {
+	my $v = shift;
+
+	my $ip = $v->{user_ip};
+	my $uid = $v->{user_edited};
+	my $time = gmtime( $v->{edit_time} )->datetime;
+	my $wikitext = $v->{text};
+
+	my $contributor = "<contributor>"
+		. ($uid ? "<username>$uid</username>" : "")
+		. ($ip  ? "<ip>$ip</ip>" : "")
+		. "</contributor>\n";
+	my $timestamp = "<timestamp>" . $time . "Z</timestamp>\n";
+
+	my $comment = $v->{comment} // ''; # but consider link conversion
+	$comment = "<comment>" . $comment . "</comment>\n";
+
+	my $text = "<text>" . "dummy" . "</text>\n";
+	return "<revision>\n",
+		$timestamp, $contributor, $comment, $text,
+		"</revision>\n";
 }
