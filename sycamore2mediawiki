@@ -1,0 +1,69 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use feature 'say';
+use utf8::all;
+use FindBin '$Bin';
+use lib "$Bin/lib";
+use MediaWiki::FromSycamore;
+
+
+my ($INPUT, $OUTPUT) = @ARGV;
+
+if (not defined $INPUT or $INPUT eq '-h' or $INPUT eq '--help') {
+	usage();
+	exit;
+}
+
+if ($INPUT eq ($OUTPUT//'')) { die usage(); }
+unless (-f $INPUT) {
+	say "Error: Input file does not exist\n";
+	usage();
+	exit 2;
+}
+
+# Auto detect what INPUT is:
+open my $ih, "<", $INPUT or die "Cannot open input file $INPUT";
+read $ih, my $idata, 500;
+close $ih;
+my $is_xml = ( $idata =~ /<sycamore\W/ ? 1 : 0 );
+
+
+# Where the magic happens #
+
+if ($is_xml) {
+	MediaWiki::FromSycamore->load_propercased_names_from_XML(
+		input => $INPUT);
+	MediaWiki::FromSycamore->convert_XML_wikitext(
+		input => $INPUT,
+		output => $OUTPUT);
+}
+else {
+	local $/ = undef;
+	open my $fh, "<", $INPUT;
+	my $wikicode = <$fh>;
+	my $outh;
+	if ($OUTPUT) {
+		open $outh, ">", $OUTPUT or die "Cannot open output file $OUTPUT";
+	} else {
+		$outh = *STDOUT;
+	}
+	print $outh MediaWiki::FromSycamore->convert_wikicode($wikicode);
+}
+
+
+
+sub usage {
+print q(sycamore2mediawiki <INPUT> [<OUTPUT>]
+	Converts Sycamore (a.k.a. Wiki Spot) format wikicode to Mediawiki
+	wikicode.  If <INPUT> is an XML dump, Mediawiki export format is
+	produced, otherwise it will assume the input file is raw wikicode
+	and convert it accordingly.
+	<OUTPUT> is the destination file for converted code.  If omitted,
+	it will be output onto STDOUT.
+);
+1;
+}
+
+	

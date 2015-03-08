@@ -81,6 +81,7 @@ sub convert_wikicode {
 	$wc =~ s/\[\[ (\w+) (?: \( ([^\)]+) \) )? \]\]/macro2template(lc($1), $2)/xeg;
 	# This needs to be fixed for quoted strings ^
 	# ... actually I just hacked around that later
+	# TODO: see if images need to be renamed
 
 	# Links ["foo" bar] to [[foo|bar]]
 	$wc =~ s/\["([^"]+)"(?: ([^\]]+))?\]/_internal_link_rw($1, $2)/eg;
@@ -110,9 +111,6 @@ sub convert_wikicode {
 	# Same with numbering systems
 
 	$wc =~ s/---?/—/g;
-
-	# BIG TODO: Tables
-
 
 	return $wc;
 }
@@ -271,9 +269,10 @@ sub convert_XML_wikitext {
 	die "this does not appear to be a sycamore file"
 		unless $reader->name() eq 'sycamore';
 
-	while ($reader->read) {
-		$reader->name eq 'page' and last;
-	}
+	$reader->nextElement('page');
+#	while ($reader->read) {
+#		$reader->name eq 'page' and last;
+#	}
 
 	my $xs = XML::Simple->new('ForceArray' => ['version']);
 
@@ -294,7 +293,7 @@ sub convert_XML_wikitext {
 			"<title>$title</title>\n",
 			($restrictions || "");
 
-		print $outfh render_revision($_) for @{$page->{version}};
+		print $outfh $self->render_revision($_) for @{$page->{version}};
 
 		print $outfh "</page>\n\n";
 		$reader->nextSiblingElement('page') > 0 or last;
@@ -303,25 +302,46 @@ sub convert_XML_wikitext {
 	print $outfh "</mediawiki>\n";
 }
 
+our %encode = ( qw/ ' &apos; " &quot; & &amp; < &lt; > &gt; /);
+
 sub render_revision {
-	my $v = shift;
+	my ($self, $v) = @_;
 
 	my $ip = $v->{user_ip};
 	my $uid = $v->{user_edited};
 	my $time = gmtime( $v->{edit_time} )->datetime;
-	my $wikitext = $v->{text};
+	my $wikitext = $self->convert_wikitext($v->{text});
+	$wikitext =~ s/(['"&<>])/$encode{$1}/g;
 
-	my $contributor = "<contributor>"
-		. ($uid ? "<username>$uid</username>" : "")
-		. ($ip  ? "<ip>$ip</ip>" : "")
-		. "</contributor>\n";
-	my $timestamp = "<timestamp>" . $time . "Z</timestamp>\n";
+	my $contributor = ($uid ? "<username>$uid</username>" : "")
+		. ($ip  ? "<ip>$ip</ip>" : "");
 
-	my $comment = $v->{comment} // ''; # but consider link conversion
-	$comment = "<comment>" . $comment . "</comment>\n";
+	my $comment = $v->{comment} // '';
+	$comment =~ s/\["([^"]+)"(?: ([^\]]+))?\]/_internal_link_rw($1, $2)/eg;
 
-	my $text = "<text>" . "dummy" . "</text>\n";
 	return "<revision>\n",
-		$timestamp, $contributor, $comment, $text,
+			"<timestamp>", $time, "Z</timestamp>\n",
+			"<contributor>", $contributor, "</contributor>\n",
+			"<comment>", $comment, "</comment>\n",
+			"<text>", $wikitext, "</text>\n",
 		"</revision>\n";
+}
+
+sub load_propercased_names_from_XML {
+	my $self = shift;
+	my %options = @_;
+
+	my $reader = XML::LibXML::Reader->new(location => $options{input})
+		   or die "cannot read $options{input}\n";
+	$reader->read;
+	die "this does not appear to be a sycamore file"
+		unless $reader->name() eq 'sycamore';
+
+	$reader->nextElement('page');
+	while (1) {
+		my $name = $reader->getAttribute('propercased_name');
+		$propercased_name{lc($name)} = $name;
+		$reader->nextSiblingElement('page') > 0 or last;
+	}
+	$reader->finish();
 }
