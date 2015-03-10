@@ -8,6 +8,8 @@ use feature 'say';
 use XML::LibXML::Reader;
 use XML::Simple; #seriously sometimes I just want a tree
 use Time::Piece;
+use File::Path 'make_path';
+use MIME::Base64;
 
 
 our %macro_conversions = (
@@ -34,6 +36,7 @@ our %macro_conversions = (
 
 );
 our %propercased_name;
+our %file_names;
 
 my %alignments = ( qw/ ( left : center ) right ^ top v bottom / );
 my %align_type = ( qw/ ( align : align ) align ^ valign v valign / );
@@ -338,10 +341,51 @@ sub load_propercased_names_from_XML {
 		unless $reader->name() eq 'sycamore';
 
 	$reader->nextElement('page');
-	while (1) {
+	do {
 		my $name = $reader->getAttribute('propercased_name');
 		$propercased_name{lc($name)} = $name;
-		$reader->nextSiblingElement('page') > 0 or last;
-	}
+	} while $reader->nextSiblingElement('page') > 0;
+
 	$reader->finish();
 }
+
+sub extract_files {
+	my ($self, $reader, $extract_destination) = @_;
+	$reader->nextElement('file') or return;
+	my %seen_names;
+	if ($extract_destination) {
+		if (-d $extract_destination and -w _ ) { ; } # all good here
+		elsif ( ! -e _ and make_path($extract_destination) ) { ; } # ok that worked
+		else { die "Cannot write images to $extract_destination: not a writable directory and could not be created"; }
+	}
+
+	do {{
+		my ($page, $deleted, $name, $uploaduid, $uploadip, $time) =
+			map { $reader->getAttribute($_) // '' }
+				qw/name attached_to_pagename_propercased uploaded_by_ip uploaded_by uploaded_time deleted/;
+		next if $deleted eq "True";
+
+		my $newname;
+		if (exists $seen_names{$name}) {
+			$newname = ("$page~~$name" =~ s|/||gr);
+			$seen_names{$newname} = undef;
+			$file_names{$page}{$name} = $newname;
+		}
+		else {
+			my $newname = ($name =~ s|/||gr);
+			$seen_names{$name} = undef;
+			$file_names{$page}{$name} = $newname;
+		}
+
+		if ($extract_destination) {
+			open my $fh, ">", "$extract_destination/$newname" or die "Error: Couldn't write $extract_destination/$newname";
+			print $fh decode_base64( $reader->readInnerXml() );
+			close $fh;
+		}
+
+	#TODO: make a skeleton page for each uploaded file
+
+	}} while $reader->nextSiblingElement('page') > 0;
+}
+
+1;
