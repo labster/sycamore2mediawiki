@@ -25,7 +25,7 @@ our %macro_conversions = (
 	'comments' => 'comments',
 	'mailto' => \&_mailTo_macro,
 	'tableofcontents' => sub {
-		$_[1]->[0] eq 'right'
+		$_[1]->[0] && $_[1]->[0] eq 'right'
 			? '<div style="float:right">__TOC__</div>'
 			: '__TOC__' },
 	'address' => 'address',
@@ -37,6 +37,7 @@ our %macro_conversions = (
 );
 our %propercased_name;
 our %file_names;
+my $current_parse_page;
 
 my %alignments = ( qw/ ( left : center ) right ^ top v bottom / );
 my %align_type = ( qw/ ( align : align ) align ^ valign v valign / );
@@ -211,6 +212,7 @@ sub macro2template {
 sub _insert_image {
 	my (undef, $arglist) = @_;
 	my ($filename, @args) = @$arglist;
+	$filename = $file_names{$current_parse_page}{$filename} // $filename;
 	my @captionbits;  #sorry I know this is hacky
 	my $type = undef;
 	for (@args) {
@@ -273,15 +275,12 @@ sub convert_XML_wikitext {
 		unless $reader->name() eq 'sycamore';
 
 	$reader->nextElement('page');
-#	while ($reader->read) {
-#		$reader->name eq 'page' and last;
-#	}
 
 	my $xs = XML::Simple->new('ForceArray' => ['version']);
 
 	print $outfh qq/<mediawiki xml:lang="en">\n/;
 
-	while (1) {
+	do {
 		die $reader->name if $reader->name ne 'page';
 
 		# Once we have a bite-sized chunk, go ahead and turn it
@@ -293,19 +292,49 @@ sub convert_XML_wikitext {
 		my $restrictions = undef;
 
 		print $outfh "<page>\n",
-			"<title>$title</title>\n",
+			"<title>", clean_page_name($title), "</title>\n",
 			($restrictions || "");
 
+		$current_parse_page = $title;
 		print $outfh $self->render_revision($_) for @{$page->{version}};
 
 		print $outfh "</page>\n\n";
-		$reader->nextSiblingElement('page') > 0 or last;
+
+	} while $reader->nextSiblingElement('page') > 0;
+
+	if ($reader->nextElement('file') > 0) {
+	do {
+		my ($page, $deleted, $name, $uploaduid, $uploadip, $time) =
+			map { $reader->getAttribute($_) // '' }
+				qw/name attached_to_pagename_propercased uploaded_by_ip uploaded_by uploaded_time deleted/;
+		next if $deleted eq "True";
+
+		$name = clean_page_name($name);
+		print $outfh "<page>\n",
+			"<title>$name</title>\n",
+			"<ns>6</ns>\n";
+
+		print $outfh $self->render_revision( {
+			user_ip => $uploadip,
+			user_edited => $uploaduid,
+			edit_time => $time,
+			text => 'Import from Wiki Spot wiki' });
+
+		print $outfh "</page>\n\n";
+	} while $reader->nextSiblingElement('file') > 0;
 	}
 
 	print $outfh "</mediawiki>\n";
 }
 
+# uh, random stuff to make sure our XML is clean
 our %encode = ( qw/ ' &apos; " &quot; & &amp; < &lt; > &gt; /);
+sub clean_page_name { # and no pipes in MW page names
+	$_ = shift;
+	s/[|<>]//g;
+	s/(['"&])/$encode{$1}/gr;
+}
+sub encode_entities_mut { $_[0] =~ s/(['"&<>])/$encode{$1}/g; }
 
 sub render_revision {
 	my ($self, $v) = @_;
@@ -313,14 +342,15 @@ sub render_revision {
 	my $ip = $v->{user_ip};
 	my $uid = $v->{user_edited};
 	my $time = gmtime( $v->{edit_time} )->datetime;
-	my $wikitext = $self->convert_wikitext($v->{text});
-	$wikitext =~ s/(['"&<>])/$encode{$1}/g;
+	my $wikitext = $self->convert_wikicode($v->{text});
+	encode_entities_mut($wikitext);
 
 	my $contributor = ($uid ? "<username>$uid</username>" : "")
 		. ($ip  ? "<ip>$ip</ip>" : "");
 
 	my $comment = $v->{comment} // '';
 	$comment =~ s/\["([^"]+)"(?: ([^\]]+))?\]/_internal_link_rw($1, $2)/eg;
+	encode_entities_mut($comment);
 
 	return "<revision>\n",
 			"<timestamp>", $time, "Z</timestamp>\n",
@@ -346,6 +376,8 @@ sub load_propercased_names_from_XML {
 		$propercased_name{lc($name)} = $name;
 	} while $reader->nextSiblingElement('page') > 0;
 
+	$self->extract_files($reader, $options{files});
+
 	$reader->finish();
 }
 
@@ -365,14 +397,17 @@ sub extract_files {
 				qw/name attached_to_pagename_propercased uploaded_by_ip uploaded_by uploaded_time deleted/;
 		next if $deleted eq "True";
 
+		# Determine what to call this on disk and save the info
+		# for the wikicode translation phase
 		my $newname;
 		if (exists $seen_names{$name}) {
-			$newname = ("$page~~$name" =~ s|/||gr);
+			$newname = ("$page~~$name" =~ s~[/|<>]~~gr);
+			die "unresolved duplicate name $page~~$name" if exists $seen_names{$newname};
 			$seen_names{$newname} = undef;
 			$file_names{$page}{$name} = $newname;
 		}
 		else {
-			my $newname = ($name =~ s|/||gr);
+			my $newname = ($name =~  s~[/|<>]~~gr);
 			$seen_names{$name} = undef;
 			$file_names{$page}{$name} = $newname;
 		}

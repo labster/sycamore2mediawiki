@@ -9,7 +9,7 @@ use lib "$Bin/lib";
 use MediaWiki::FromSycamore;
 
 
-my ($INPUT, $OUTPUT) = @ARGV;
+my ($INPUT, $OUTPUT, $FILEDIR) = @ARGV;
 
 if (not defined $INPUT or $INPUT eq '-h' or $INPUT eq '--help') {
 	usage();
@@ -34,7 +34,8 @@ my $is_xml = ( $idata =~ /<sycamore\W/ ? 1 : 0 );
 
 if ($is_xml) {
 	MediaWiki::FromSycamore->load_propercased_names_from_XML(
-		input => $INPUT);
+		input => $INPUT,
+		file_dir => $FILEDIR);
 	MediaWiki::FromSycamore->convert_XML_wikitext(
 		input => $INPUT,
 		output => $OUTPUT);
@@ -55,15 +56,16 @@ else {
 
 
 sub usage {
-print q(sycamore2mediawiki <INPUT> [<OUTPUT>]
+print q(sycamore2mediawiki <INPUT> [<OUTPUT>] [<FILEDIR>]
 	Converts Sycamore (a.k.a. Wiki Spot) format wikicode to Mediawiki
 	wikicode.  If <INPUT> is an XML dump, Mediawiki export format is
 	produced, otherwise it will assume the input file is raw wikicode
 	and convert it accordingly.
 	<OUTPUT> is the destination file for converted code.  If omitted,
 	it will be output onto STDOUT.
+	<FILEDIR> is the location where the current version of files will
+	be extracted to.  This will be created if it does not exist.  If
+	omitted, files will not be extracted.
 );
 1;
 }
-
-	
