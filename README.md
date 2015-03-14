@@ -59,6 +59,18 @@ Known issues: crappy API.  It's hard to be motivated to do
 a good design on a program that will have limited usefulness in
 2 months.
 
+XML Errors
+----------
+
+If you get XML errors like `parser error : PCDATA invalid Char value 3`,
+consider running this snippet on your input XML file:
+
+	cat input.xml | perl -E ' while (<>) {  s/[\000-\037]+//g; say $_ }' > new_input.xml
+
+That will remove all control characters, but then re-add the newline
+at the end of each line.  Safe since you probably weren't using tabs
+for anything, and all wiki file data is encoded in base64.
+
 Using this just to extract files
 --------------------------------
 
