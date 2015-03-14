@@ -11,7 +11,7 @@ use Time::Piece;
 use File::Path 'make_path';
 use MIME::Base64;
 
-
+our $DEBUG = 1;
 our %macro_conversions = (
 	'br' => sub { "<br/>" },
 	'recentchanges' => sub { '#REDIRECT [[Special:RecentChanges]]' },
@@ -268,7 +268,8 @@ sub convert_XML_wikitext {
 		$outfh = *STDOUT;
 	}
 
-	my $reader = XML::LibXML::Reader->new(location => $options{input})
+	my $reader = XML::LibXML::Reader->new(location => $options{input},
+			huge => 1)
 		   or die "cannot read $options{input}\n";
 	$reader->read;
 	die "this does not appear to be a sycamore file"
@@ -291,6 +292,7 @@ sub convert_XML_wikitext {
 		my $title = $page->{propercased_name};
 		my $restrictions = undef;
 
+		say STDERR "Converting $title" if $DEBUG;
 		print $outfh "<page>\n",
 			"<title>", clean_page_name($title), "</title>\n",
 			($restrictions || "");
@@ -364,7 +366,8 @@ sub load_propercased_names_from_XML {
 	my $self = shift;
 	my %options = @_;
 
-	my $reader = XML::LibXML::Reader->new(location => $options{input})
+	my $reader = XML::LibXML::Reader->new(location => $options{input},
+			huge => 1)
 		   or die "cannot read $options{input}\n";
 	$reader->read;
 	die "this does not appear to be a sycamore file"
@@ -392,9 +395,9 @@ sub extract_files {
 	}
 
 	do {{
-		my ($page, $deleted, $name, $uploaduid, $uploadip, $time) =
+		my ($name, $page, $deleted) =
 			map { $reader->getAttribute($_) // '' }
-				qw/name attached_to_pagename_propercased uploaded_by_ip uploaded_by uploaded_time deleted/;
+				qw/name attached_to_pagename_propercased deleted/;
 		next if $deleted eq "True";
 
 		# Determine what to call this on disk and save the info
@@ -407,20 +410,21 @@ sub extract_files {
 			$file_names{$page}{$name} = $newname;
 		}
 		else {
-			my $newname = ($name =~  s~[/|<>]~~gr);
+			$newname = ($name =~  s~[/|<>]~~gr);
 			$seen_names{$name} = undef;
 			$file_names{$page}{$name} = $newname;
 		}
 
 		if ($extract_destination) {
-			open my $fh, ">", "$extract_destination/$newname" or die "Error: Couldn't write $extract_destination/$newname";
+			say STDERR "Extracting file $name as $newname" if $DEBUG;
+			open my $fh, ">:bytes", "$extract_destination/$newname" or die "Error: Couldn't write $extract_destination/$newname";
 			print $fh decode_base64( $reader->readInnerXml() );
 			close $fh;
 		}
 
 	#TODO: make a skeleton page for each uploaded file
 
-	}} while $reader->nextSiblingElement('page') > 0;
+	}} while $reader->nextSiblingElement('file') > 0;
 }
 
 1;

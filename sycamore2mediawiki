@@ -35,7 +35,7 @@ my $is_xml = ( $idata =~ /<sycamore\W/ ? 1 : 0 );
 if ($is_xml) {
 	MediaWiki::FromSycamore->load_propercased_names_from_XML(
 		input => $INPUT,
-		file_dir => $FILEDIR);
+		files => $FILEDIR);
 	MediaWiki::FromSycamore->convert_XML_wikitext(
 		input => $INPUT,
 		output => $OUTPUT);
