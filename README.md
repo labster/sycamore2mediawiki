@@ -47,12 +47,38 @@ Convert a normal file:
 
 Convert an XML dump:
 
-	> sycamore2mediawiki Wiki_dump.xml mediawiki_dump.xml
+	> sycamore2mediawiki Wiki_dump.xml mediawiki_dump.xml files_output_directory
+
+The last two arguments are optional here -- if you omit the output
+directory, files will be parsed for renaming, but not output.
 
 Note that we're still in beta, so these transformations aren't
 perfect. Tests and feedback are welcome to get this perfect.
 
-Known issues: potential file renaming issues, support for extracting files.
+Known issues: crappy API.  It's hard to be motivated to do
+a good design on a program that will have limited usefulness in
+2 months.
+
+Using this just to extract files
+--------------------------------
+
+You can produce an XML output file which you then throw away,
+just to make an files directory.  File names are the same as
+before, if unique, and with mediawiki metacharacters removed.
+(That is `[/<>|]`).  If the name was not unique, the file name is
+prefixed with its original Sycamore page name and two tildes (`~~`).
+
+Because of how badly Mediawiki handles file import -- it can
+only read a directory and add everything there to the wiki --
+we only output the current, non-deleted revision of each file.
+There is currently no way of extracting previous versions
+of files, but you can probably figure out how if you need it.
+Or you know, click the issues icon to the right and ask me.
+
+Incidentally, the files are encoded in base64, which makes for
+some pretty huge XML nodes.  You can manually extract file
+information and pipe it to base64 on the command line, if you
+need.
 
 API
 ---
@@ -102,9 +128,10 @@ as much content as possible.
 Development Plan
 ----------------
 
-* Get a parser working
-* Write tests
-* Develop scripts that convert from Sycamore export format to Mediawiki format.
+* Get a parser working (done)
+* Write tests (mostly done)
+* Develop scripts that convert from Sycamore export format to Mediawiki format (done)
+* TODO: Make sure everything actually imports to Mediawiki
 
 Authors
 -------
