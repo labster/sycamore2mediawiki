@@ -239,6 +239,7 @@ sub _internal_link_rw {
 	if ($link eq $text) { $text = '' }
 
 	$link =~ s/^Users\//User:/i;
+	$link =~ s|/Talk$|| and $link = "Talk:$link";
 	return $text ? "[[$link|$text]]" : "[[$link]]";
 }
 
@@ -289,15 +290,16 @@ sub convert_XML_wikitext {
 		# Yes I realize I'm parsing it twice :/
 		my $page = $xs->XMLin( $reader->readOuterXml() );
 
-		my $title = $page->{propercased_name};
+		$current_parse_page = $page->{propercased_name};
+		my $title = $propercased_name{lc($current_parse_page)} // clean_page_name($current_parse_page);
+		encode_entities_mut($title);
 		my $restrictions = undef;
 
 		say STDERR "Converting $title" if $DEBUG;
 		print $outfh "<page>\n",
-			"<title>", clean_page_name($title), "</title>\n",
+			"<title>", $title, "</title>\n",
 			($restrictions || "");
 
-		$current_parse_page = $title;
 		print $outfh $self->render_revision($_) for @{$page->{version}};
 
 		print $outfh "</page>\n\n";
@@ -305,13 +307,14 @@ sub convert_XML_wikitext {
 	} while $reader->nextSiblingElement('page') > 0;
 
 	if ($reader->nextElement('file') > 0) {
-	do {
-		my ($page, $deleted, $name, $uploaduid, $uploadip, $time) =
+	do {{
+		my ($name, $page, $uploadip, $uploaduid, $time, $deleted) =
 			map { $reader->getAttribute($_) // '' }
 				qw/name attached_to_pagename_propercased uploaded_by_ip uploaded_by uploaded_time deleted/;
 		next if $deleted eq "True";
 
-		$name = clean_page_name($name);
+		$name = $file_names{$page}{$name} // clean_page_name($name);
+		encode_entities_mut($name);
 		print $outfh "<page>\n",
 			"<title>$name</title>\n",
 			"<ns>6</ns>\n";
@@ -323,7 +326,7 @@ sub convert_XML_wikitext {
 			text => 'Import from Wiki Spot wiki' });
 
 		print $outfh "</page>\n\n";
-	} while $reader->nextSiblingElement('file') > 0;
+	}} while $reader->nextSiblingElement('file') > 0;
 	}
 
 	print $outfh "</mediawiki>\n";
@@ -332,9 +335,7 @@ sub convert_XML_wikitext {
 # uh, random stuff to make sure our XML is clean
 our %encode = ( qw/ ' &apos; " &quot; & &amp; < &lt; > &gt; /);
 sub clean_page_name { # and no pipes in MW page names
-	$_ = shift;
-	s/[|<>]//g;
-	s/(['"&])/$encode{$1}/gr;
+	shift =~ s/[|<>]//rg;
 }
 sub encode_entities_mut { $_[0] =~ s/(['"&<>])/$encode{$1}/g; }
 
@@ -376,9 +377,13 @@ sub load_propercased_names_from_XML {
 	$reader->nextElement('page');
 	do {
 		my $name = $reader->getAttribute('propercased_name');
-		$propercased_name{lc($name)} = $name;
+		my $newname = $name;
+		$newname =~ s|^Users/|User:|i;
+		$newname =~ s|/Talk$||i and $newname = "Talk:$newname";
+		$propercased_name{lc($name)} = $newname;
 	} while $reader->nextSiblingElement('page') > 0;
 
+	print STDERR scalar keys %propercased_name, " names loaded\n" if $DEBUG;
 	$self->extract_files($reader, $options{files});
 
 	$reader->finish();
@@ -421,8 +426,6 @@ sub extract_files {
 			print $fh decode_base64( $reader->readInnerXml() );
 			close $fh;
 		}
-
-	#TODO: make a skeleton page for each uploaded file
 
 	}} while $reader->nextSiblingElement('file') > 0;
 }
