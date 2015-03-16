@@ -335,7 +335,7 @@ sub convert_XML_wikitext {
 # uh, random stuff to make sure our XML is clean
 our %encode = ( qw/ ' &apos; " &quot; & &amp; < &lt; > &gt; /);
 sub clean_page_name { # and no pipes in MW page names
-	shift =~ s/[|<>]//rg;
+	shift =~ s/[\/\|\#<>\{\}\[\]]//rg;
 }
 sub encode_entities_mut { $_[0] =~ s/(['"&<>])/$encode{$1}/g; }
 
@@ -409,13 +409,13 @@ sub extract_files {
 		# for the wikicode translation phase
 		my $newname;
 		if (exists $seen_names{$name}) {
-			$newname = ("$page~~$name" =~ s~[/|<>]~~gr);
+			$newname = ("$page~~$name" =~ s~(\/\|\#<>\{\}\[\])~~gr);
 			die "unresolved duplicate name $page~~$name" if exists $seen_names{$newname};
 			$seen_names{$newname} = undef;
 			$file_names{$page}{$name} = $newname;
 		}
 		else {
-			$newname = ($name =~  s~[/|<>]~~gr);
+			$newname = ($name =~  s~(\/\|\#<>\{\}\[\])~~gr);
 			$seen_names{$name} = undef;
 			$file_names{$page}{$name} = $newname;
 		}
