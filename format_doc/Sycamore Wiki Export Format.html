@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<script type="text/javascript">var authentication_url = 'http://wikispot.org/?action=userform&login_check=1&backto_wiki=sycamore&backto_page=http%3A//www.projectsycamore.org/Export';</script><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="robots" content="index,follow">
+<link rel="shortcut icon" href="http://www.projectsycamore.org/Wiki_Settings/Images?sendfile=true&amp;file=tinylogo.png" type="image/png"><link rel="icon" href="http://www.projectsycamore.org/Wiki_Settings/Images?sendfile=true&amp;file=tinylogo.png" type="image/png"><script type="text/javascript">var urlPrefix = '/wiki';
+var curTimestamp = '1427747163.18'; var action = '/Export'; var may_inline_edit = false;
+var onLoadStuff = new Array();</script><script src="Sycamore%20Wiki%20Export%20Format_files/utils.js" type="text/javascript" charset="utf-8"></script>
+
+<link rel="alternate" type="application/rss+xml" href="http://www.projectsycamore.org/Export?action=rss_rc" title="Recent Changes RSS Feed for Export">
+<title>Export - Sycamore Wiki</title>
+
+<link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="Sycamore%20Wiki%20Export%20Format_files/CSS.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="Sycamore%20Wiki%20Export%20Format_files/CSS_002.css">
+<link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="Sycamore%20Wiki%20Export%20Format_files/CSS_003.css">
+<style type="text/css">#title td { padding-right: 1pt; }</style>
+
+<style>#content > #right > .dose > .dosesingle,
+#content > #center > .dose > .dosesingle
+{display:none !important;}</style></head>
+
+<body dir="ltr" onload="doOnLoadStuff();" lang="en">
+<div style="background-color: #ffffaa; font-size: small; padding: 0.5em;">The wikispot.org service will be shut down on April 1st. Please see <a href="http://wikispot.org/2015_Shutdown_Notice" target="_blank">this page</a> for more information.</div>
+<div id="banner">
+<table class="logo">
+<tbody><tr>
+<td class="logo_banner">
+<a class="nostyle" href="http://www.projectsycamore.org/Front_Page"><img src="Sycamore%20Wiki%20Export%20Format_files/Images.png" alt="wiki logo" style="behavior: url('/wiki/pngbehavior.htc');" align="middle" height="60" width="221"></a>
+</td>
+<td class="user_banner" align="right" valign="top">
+<form action="https://wikispot.org/User_Settings" method="POST" onsubmit="if (!canSetCookies()) { alert('You need cookies enabled to log in.'); return false;}"><input name="action" value="userform" type="hidden"><div class="login_area"><table><tbody><tr><td align="right" nowrap="nowrap" width="50%">User name:</td><td colspan="2" align="left" nowrap="nowrap"><input class="formfields" size="22" name="username" type="text"></td> </tr> <tr><td align="right">Password:</td><td colspan="2" align="left" nowrap="nowrap"> <input class="formfields" size="22" name="password" type="password"> <input name="login" value="Login" type="hidden"><input name="backto_wiki" value="sycamore" type="hidden"><input name="backto_page" value="http%3A//www.projectsycamore.org/Export" type="hidden"><input name="qs" value="" type="hidden"></td></tr><tr><td></td><td align="left" nowrap="nowrap">(<a href="http://wikispot.org/User_Settings?new_user=1&amp;from_wiki=sycamore">new user</a>)</td><td align="right"><input name="login" value="Login" alt="login" type="submit"></td></tr></tbody></table></div></form>
+</td>
+</tr>
+</tbody></table>
+<div class="tabArea"><a href="http://www.projectsycamore.org/Front_Page" class="tab">Front Page</a><a href="http://www.projectsycamore.org/People" class="tab">People</a><a href="http://www.projectsycamore.org/Recent_Changes" class="tab">Recent Changes</a><a href="http://www.projectsycamore.org/Export" class="tab activeTab">Export</a></div>
+</div>
+<div id="title">
+<table id="title_area_table">
+<tbody><tr>
+<td>
+<table id="title_table">
+<tbody><tr id="iconRow">
+<td id="title_text"><h1><a title="Export" class="currentChild" href="http://www.projectsycamore.org/Export">Export</a></h1></td>
+<td class="pageIcon"><span id="infoIcon"><a style="text-decoration: none;" href="http://www.projectsycamore.org/Export?action=info"><img class="borderless" src="Sycamore%20Wiki%20Export%20Format_files/Images_002.png" alt="Info" style="behavior: url('/wiki/pngbehavior.htc');" height="24" width="24"><span>Info</span></a></span></td>
+
+
+</tr></tbody></table>
+</td>
+<td id="search_form">
+<form method="GET" action="/Export">
+<input name="action" value="search" type="hidden">
+Search: <input class="formfields" name="inline_string" size="15" maxlength="101" type="text">&nbsp;<input src="Sycamore%20Wiki%20Export%20Format_files/search.png" alt="[?]" type="image">&nbsp;&nbsp;
+</form>
+</td>
+</tr></tbody></table></div>
+
+
+
+
+<div id="content" class="content wikipage" dir="ltr" lang="en">
+<p id="l1">
+Sycamore has a command-line export function.  It's in <tt>Sycamore/</tt>.  Just run <tt>python&nbsp;export.py</tt>. 
+</p>
+<p id="l3">
+This is a per-wiki XML dump.  This is different from a <a title="Backup" href="http://www.projectsycamore.org/Backup">database backup</a>.  The wiki export should contain all material needed to reconstruct the wiki in its entirety. 
+</p>
+<span id="head-0b655ebd507df13ecb0e8e7756f6f892e3c26154"><h2 id="l5">Initial format</h2></span>
+<p id="l6">
+Here's the initial export format (Sycamore 0.1d) 
+</p>
+<pre>Export a wiki.  Note that some sections will appear in the export
+only if you have permission.  The security section, for instance,
+will appear only if you are an administrator of the wiki in question.
+
+Export format looks something like:
+
+&lt;sycamore version="0.1d"&gt;
+&lt;wiki name="shortname" id="wiki_id" domain="domain name"
+      is_disabled="True / False" sitename="long site name"&gt;
+&lt;settings key="value" ../&gt;
+&lt;pages&gt;
+&lt;page name="page name" propercased_name="Page Name"&gt;
+&lt;text&gt;current page text&lt;/text&gt;
+&lt;version propercased_name="Page Name!" edit_time="unix tm"
+         user_edited="username" edit_type="an enum edit type str"
+         comment="edit comment" user_ip="ip of edit"&gt;
+&lt;text&gt;this version page text&lt;/text&gt;
+&lt;/version&gt;
+&lt;/page&gt;
+&lt;/pages&gt;
+
+&lt;files&gt;
+&lt;file name="filename" attached_to_pagename="page name"&gt;
+      uploaded_time="unix tm" uploaded_by="username"
+      uploaded_by_ip="ip addr"
+      attached_to_pagename_propercased="Page Name"
+      deleted="False"&gt;base64 encoded file content&lt;/file&gt;
+&lt;file name="filename" attached_to_pagename="page name"&gt;
+      uploaded_time="unix tm" uploaded_by="username"
+      uploaded_by_ip="ip addr"
+      deleted_time="unix tm" deleted_by="username"
+      deleted_by_ip="ip addr"
+      attached_to_pagename_propercased="Page Name"
+      deleted="True"&gt;base 64 encoded file content&lt;/file&gt;
+...
+&lt;/files&gt;
+
+&lt;events&gt;
+&lt;event event_time="unix tm" posted_by="username" location="text here"
+       name="name of event" posted_by_ip="ip addr"
+       posted_time="unix tm"&gt;event text&lt;/event&gt;
+&lt;/events&gt;
+
+&lt;security&gt;
+&lt;acls&gt;
+&lt;acl pagename="page name" groupname="group name"
+     may_read="True / False" may_edit="True / False"
+     may_delete="True / False" may_admin="True / False" /&gt;
+...
+&lt;/acls&gt;
+&lt;groups&gt;
+&lt;group name="group name"&gt;
+&lt;defaults may_read="True / False" may_edit="True / False"
+          may_delete="True / False"    may_admin="True / False" /&gt;
+&lt;user="user name"/&gt;
+&lt;user="user name2"/&gt;
+&lt;user="ip addr" type="IP"&gt;
+..
+&lt;/group&gt;
+&lt;/groups&gt;
+&lt;/security&gt;
+
+&lt;map&gt;
+&lt;current&gt;
+&lt;point pagename="page name" x="x loc" y="y loc"
+       created_time="unix tm" created_by="user name"
+       created_by_ip="ip addr" pagename_propercased="page Name"
+       address="address string" /&gt;
+...
+&lt;/current&gt;
+&lt;old&gt;
+&lt;point pagename="page name" x="x loc" y="y loc"
+       created_time="unix tm" created_by="user name"
+       created_by_ip="ip addr"
+       deleted_time="unix tm" deleted_by="username"
+       deleted_by_ip="ip addr"
+       pagename_propercased="page Name"
+       address="address string" /&gt;
+...
+&lt;/old&gt;
+&lt;/map&gt;
+&lt;/wiki&gt;
+&lt;/sycamore&gt;
+</pre><span id="head-047ca54032a1756c098d3bc1a941a0ed8e583df8"><h2 id="l94">Future</h2></span>
+
+        <ul>
+
+        <li>
+<p id="l95">
+ Limit to current versions of pages and files only <br>
+</p>
+</li>
+        <li>
+<p id="l96">
+ Speed up utility (!!) and make it web-based 
+</p>
+</li>
+
+        </ul>
+
+
+<span id="head-84a47cb41d298850d4fe93783a97ab96c0b029d0"><h2 id="l98">Wiki Spot implementation brain dump</h2></span>
+
+                <ul>
+
+                <li>
+<p id="l99">
+ takes into account page security: user1, user2. <br>
+</p>
+</li>
+
+                            <ul>
+
+                            <li>
+<p id="l100">
+ user1 and user2 =&gt; set of groups they belong to <br>
+</p>
+</li>
+
+                                        <ul>
+
+                                        <li>
+<p id="l101">
+ set of groups you're in determines what you can do. <br>
+</p>
+</li>
+
+                                                <ul>
+
+<p id="l102">
+            f(u) = (g1, g2, ..) <br></p><p id="l103">
+            but what if i'm in g2 that differs only in editability but 
+not readability? - we can only tell at global level..say for a page: <br></p><p id="l104">
+            g1 edit, read g2 read g3 nada =&gt; i can edit, read 
+</p>
+<p id="l106">
+            if i am in a special group, say Events, then my dump is generated special-like...ok, let's just do that. 
+</p>
+
+                                                </ul>
+
+
+
+                                        </ul>
+
+
+
+                            </ul>
+
+
+<p id="l108">
+    dumps unique based on groups you're a member 
+</p>
+                <li class="gap">
+<p id="l110">
+ where should the dump go? into the DB? <br>
+</p>
+</li>
+
+                        <ul>
+
+                        <li>
+<p id="l111">
+ dump to file then insert the file into the db..how do we do this 
+without eating gigs of ram? — can't even store objects that large...ok, 
+so no db <br>
+</p>
+</li>
+                        <li>
+<p id="l112">
+ store something in the db — unique_id, generated_time, file_url <br>
+</p>
+</li>
+
+                                    <ul>
+
+                                    <li>
+<p id="l113">
+ general get_file_url().. <br>
+</p>
+</li>
+
+                                            <ul>
+
+                                            <li>
+<p id="l114">
+ pulls from a config option for where big files are stored. <br>
+</p>
+</li>
+                                            <li>
+<p id="l115">
+ new config option: machine domain name.  can differ from wiki domain.  
+each machine generating exports must have unique domain. <br>
+</p>
+</li>
+
+                                            </ul>
+
+
+                                    <li>
+<p id="l116">
+ we serve up by just sucking from that file on disk — we assume it is locally accessible <br>
+</p>
+</li>
+
+                                    </ul>
+
+
+
+                                <ul>
+
+                                <li>
+<p id="l117">
+ expire_exports() — rm them. 
+</p>
+</li>
+</ul>
+
+</ul>
+
+</ul>
+
+<div style="clear: both;"></div></div>
+
+
+<script language="JavaScript" type="text/javascript">
+var donate2=new Image();donate2.src="/wiki/eggheadbeta/img/donate2.png";var donate=new Image();donate.src="/wiki/eggheadbeta/img/donate.png";</script><div id="footer"><table border="0" cellpadding="0" cellspacing="0" width="100%"><tbody><tr><td align="left" width="20%"></td><td align="center" valign="middle"><div class="license"><!-- Creative Commons License -->Except where otherwise noted, this content is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution License</a>.  See <a href="http://www.projectsycamore.org/Copyrights">Copyrights</a>.<!-- /Creative Commons License --><!--  <rdf:RDF xmlns="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/"     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"> <Work rdf:about=""><dc:type rdf:resource="http://purl.org/dc/dcmitype/Text" /><license rdf:resource="http://creativecommons.org/licenses/by/3.0/" /> </Work>  <License rdf:about="http://creativecommons.org/licenses/by/3.0/"> <permits rdf:resource="http://web.resource.org/cc/Reproduction" /> <permits rdf:resource="http://web.resource.org/cc/Distribution" /> <requires rdf:resource="http://web.resource.org/cc/Notice" /> <requires rdf:resource="http://web.resource.org/cc/Attribution" /> <permits rdf:resource="http://web.resource.org/cc/DerivativeWorks" /> </License>  </rdf:RDF>  --></div></td><td style="padding-right: 5px;" align="right" valign="middle" width="200px"><a href="http://creativecommons.org/licenses/by/3.0/"><img alt="Creative Commons License" src="Sycamore%20Wiki%20Export%20Format_files/cc.png" border="0"></a> <a href="http://wikispot.org/Donate"><img src="Sycamore%20Wiki%20Export%20Format_files/donate.png" alt="donate" border="0"></a></td></tr></tbody></table></div><div class="wikiGlobalFooter" align="center"><div class="wikiSpotFooter">This is a <a href="http://wikispot.org/">Wiki Spot</a> wiki.  Wiki Spot is a 501(c)3 non-profit organization that helps communities collaborate via wikis.</div></div>
+
+
+</body></html>
