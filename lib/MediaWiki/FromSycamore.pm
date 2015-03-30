@@ -36,9 +36,28 @@ our %macro_conversions = (
 	'include' => \&_include_page,
 
 );
+
 our %propercased_name;
 our %file_names;
 my $current_parse_page;
+
+
+our %help_page_links = (
+	"Help with Formatting" => "Formatting",
+	"Help with Editing" => "Editing",
+	"Help with Linking" => "Formatting",
+	"Help with Headings" => "Formatting",
+	"Help with Tables" => "Tables",
+	"Help with Images" => "Images",
+	"Help with Lists" => "Formatting",
+	"Help with Macros" => "Templates",
+);
+
+our %interwiki_map = (
+	'davis' => 'https://daviswiki.org/',
+	'chico' => 'https://localwiki.org/chico/',
+	'localwiki' => 'https://localwiki.org/',
+);
 
 my %alignments = ( qw/ ( left : center ) right ^ top v bottom / );
 my %align_type = ( qw/ ( align : align ) align ^ valign v valign / );
@@ -91,8 +110,7 @@ sub convert_wikicode {
 	# Links ["foo" bar] to [[foo|bar]]
 	$wc =~ s/\["([^"]+)"(?: ([^\]]+))?\]/_internal_link_rw($1, $2)/eg;
 	# interwiki links... for now assume a simple interwiki map
-	$wc =~ s/\[wiki:([^:\n]+):"[^"]"(?: ([^\]]+))?\]/
-		$3 ? "[[$1:$2]]" : "[[$1:$2|$3]]"/eg;
+	$wc =~ s/\[wiki:([^:\n]+):"([^"]+)"(?: ([^\]]+))?\]/ _interwiki_link_rw($1, $2, $3) /eg;
 
 	# Definiton lists
 	$wc =~ s/^ +([^:\n]+):: ?/; $1\n/g;
@@ -244,6 +262,23 @@ sub _internal_link_rw {
 	$link =~ s/^Users\//User:/i;
 	$link =~ s|/Talk$|| and $link = "Talk:$link";
 	return $text ? "[[$link|$text]]" : "[[$link]]";
+}
+
+sub _interwiki_link_rw {
+	my ($wiki, $link, $text) = @_;
+	if ($wiki eq 'wikispot') {
+		if ($help_page_links{$link}) { #I'm a Help: link
+			return "[[Help:" . $help_page_links{$link} . ($text ? "|$text" : '') . ']]';
+		}
+		else { $wiki = 'localwiki' }
+	}
+
+	if ($interwiki_map{$wiki}) {
+		return "[$interwiki_map{$wiki}$link" .($text ? " $text" : " $wiki:$link") . ']' ;
+	}
+	else {
+		return "[[$wiki:$link" . ($text ? "|$text" : '') . ']]';
+	}
 }
 
 sub _mailTo_macro {

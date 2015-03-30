@@ -23,6 +23,12 @@ is convert('["FooBar" FooBar]'), '[[FooBar]]', "collapse link=alt text";
 is convert("#redirect Foo page\n"), "#redirect [[Foo page]]\n",
 	"redirect";
 
+is convert(qq/[wiki:davis:"Hello"]/), "[https://daviswiki.org/Hello davis:Hello]", "basic interwiki link";
+is convert(qq/[wiki:davis:"Hello" World]/), "[https://daviswiki.org/Hello World]", "interwiki link with alt";
+is convert(qq/[wiki:wikispot:"Help with Editing"]/), "[[Help:Editing]]", "help link from interwiki";
+is convert(qq/[wiki:wikipedia:"Some Page"]/), "[[wikipedia:Some Page]]", "wikipedia interwiki link (fallthrough)";
+is convert(qq/[wiki:wikipedia:"Some Page" this page]/), "[[wikipedia:Some Page|this page]]", "wikipedia interwiki link with alt";
+
 is convert(qq/ * Indent 1\n  * Indent 2/),
   qq/* Indent 1\n** Indent 2/, "bullet indentation";
 is convert( qq/ Space indentation\n   level 3/),
