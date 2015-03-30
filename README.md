@@ -19,9 +19,11 @@ but this is because it's written in PHP and is highly customizable.
 Status
 ------
 
-I'd say we're in a middle alpha.  It's usuable, but known to be incomplete. 
-Use at your own peril.  If you have development skills,
-ask for a commit bit or send me pull requests please. :)
+Production ready, or late beta.  You should be able to use this to
+import a wiki and dump all of its files for import.
+
+If there are problems, let me know and I'll patch it...
+or just run a bot to fix it up afterwards.
 
 How to Use
 ----------
@@ -143,7 +145,8 @@ Development Plan
 * Get a parser working (done)
 * Write tests (mostly done)
 * Develop scripts that convert from Sycamore export format to Mediawiki format (done)
-* TODO: Make sure everything actually imports to Mediawiki
+* Make sure everything actually imports to Mediawiki (done!)
+
 
 Authors
 -------
