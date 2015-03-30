@@ -26,6 +26,7 @@ If there are problems, let me know and I'll patch it...
 or just run a bot to fix it up afterwards.
 
 Not converted to mediawiki:
+ - Interwiki links
  - Geodata and maps
  - Events Board
  - access restrictions/ACL/permissions

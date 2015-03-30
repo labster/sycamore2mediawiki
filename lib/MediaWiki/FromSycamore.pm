@@ -238,6 +238,8 @@ sub _internal_link_rw {
 	}
 	if (ucfirst($text) eq $link) { $link = $text }
 	if ($link eq $text) { $text = '' }
+	elsif ( ! exists $propercased_name{'main page'} and $link eq 'Main Page' and $text eq 'Front Page')
+		{ $text = '' }
 
 	$link =~ s/^Users\//User:/i;
 	$link =~ s|/Talk$|| and $link = "Talk:$link";
@@ -395,6 +397,8 @@ sub load_propercased_names_from_XML {
 
 	print STDERR scalar keys %propercased_name, " names loaded\n" if $DEBUG;
 	$self->extract_files($reader, $options{files});
+
+	$propercased_name{'front page'} = "Main Page" unless $propercased_name{'main page'};
 
 	$reader->finish();
 }
