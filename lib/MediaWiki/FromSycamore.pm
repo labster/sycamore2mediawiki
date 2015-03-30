@@ -326,7 +326,7 @@ sub convert_XML_wikitext {
 		$name = $file_names{$page}{$name} // clean_page_name($name);
 		encode_entities_mut($name);
 		print $outfh "<page>\n",
-			"<title>$name</title>\n",
+			"<title>File:$name</title>\n",
 			"<ns>6</ns>\n";
 
 		print $outfh $self->render_revision( {
