@@ -33,6 +33,7 @@ our %macro_conversions = (
 	'pagecount' => 'NUMBEROFPAGES',
 	'usercount' => 'NUMBEROFUSERS',
 	'file' => sub { "[[media:$_[1]->[0]]]" },
+	'include' => \&_include_page,
 
 );
 our %propercased_name;
@@ -256,6 +257,15 @@ sub _footnote_macro {
 	my $note = join ', ', @$arglist;
 	return $note ? "<ref>$note</ref>" : "<references/>";
 }
+
+sub _include_page {
+	my $pagename = $_[1][0];
+	$pagename = _internal_link_rw($pagename);
+	$pagename =~ s/[\[\]]+//g;
+	my $nscolon = ($pagename =~ /(?:User|Talk)\:/) ? '' : ':';
+	return "{{$nscolon$pagename}}";
+}
+
 
 #### XML handling ####
 sub convert_XML_wikitext {

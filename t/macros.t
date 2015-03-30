@@ -40,6 +40,8 @@ is convert(qq/[[Image(basic.png, "a pic")]]/),
 	"[[File:basic.png|frame|a pic]]",
 	"caption forces 'frame'";
 
+is convert(qq/[[Include(Foo)]]/), "{{:Foo}}", "Main namespace include";
+is convert("[[Include(Users/Bar/Baz)]]"), "{{User:Bar/Baz}}", "User ns transclude";
 
 
 done_testing;
