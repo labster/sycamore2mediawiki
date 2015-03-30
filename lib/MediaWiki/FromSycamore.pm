@@ -110,7 +110,7 @@ sub convert_wikicode {
 	# Links ["foo" bar] to [[foo|bar]]
 	$wc =~ s/\["([^"]+)"(?: ([^\]]+))?\]/_internal_link_rw($1, $2)/eg;
 	# interwiki links... for now assume a simple interwiki map
-	$wc =~ s/\[wiki:([^:\n]+):"([^"]+)"(?: ([^\]]+))?\]/ _interwiki_link_rw($1, $2, $3) /eg;
+	$wc =~ s/\[wiki:([^\]:\s]++)(?::("[^"]+"|\S+))?(?: ([^\]]+))?\]/ _interwiki_link_rw($1, $2, $3) /eg;
 
 	# Definiton lists
 	$wc =~ s/^ +([^:\n]+):: ?/; $1\n/g;
@@ -266,6 +266,8 @@ sub _internal_link_rw {
 
 sub _interwiki_link_rw {
 	my ($wiki, $link, $text) = @_;
+	$link //= '';
+	$link =~ s/^"|"$//g;
 	if ($wiki eq 'wikispot') {
 		if ($help_page_links{$link}) { #I'm a Help: link
 			return "[[Help:" . $help_page_links{$link} . ($text ? "|$text" : '') . ']]';
@@ -273,10 +275,12 @@ sub _interwiki_link_rw {
 		else { $wiki = 'localwiki' }
 	}
 
+
 	if ($interwiki_map{$wiki}) {
 		return "[$interwiki_map{$wiki}$link" .($text ? " $text" : " $wiki:$link") . ']' ;
 	}
 	else {
+		$link = 'Main Page' if !$link;
 		return "[[$wiki:$link" . ($text ? "|$text" : '') . ']]';
 	}
 }

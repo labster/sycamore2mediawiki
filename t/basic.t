@@ -28,6 +28,9 @@ is convert(qq/[wiki:davis:"Hello" World]/), "[https://daviswiki.org/Hello World]
 is convert(qq/[wiki:wikispot:"Help with Editing"]/), "[[Help:Editing]]", "help link from interwiki";
 is convert(qq/[wiki:wikipedia:"Some Page"]/), "[[wikipedia:Some Page]]", "wikipedia interwiki link (fallthrough)";
 is convert(qq/[wiki:wikipedia:"Some Page" this page]/), "[[wikipedia:Some Page|this page]]", "wikipedia interwiki link with alt";
+is convert(qq/[wiki:davis Davis Wiki]/), "[https://daviswiki.org/ Davis Wiki]", "empty page interwiki";
+is convert(qq/[wiki:davis:Foo Davis Wiki]/), "[https://daviswiki.org/Foo Davis Wiki]", "bareword page name interwiki";
+is convert(qq/[wiki:foobaz]/), "[[foobaz:Main Page]]", "unknown empty interwiki link (fallthrough)";
 
 is convert(qq/ * Indent 1\n  * Indent 2/),
   qq/* Indent 1\n** Indent 2/, "bullet indentation";
